@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pillscheduler/dashboard.dart';
 import 'package:pillscheduler/landingpage.dart';
-import 'package:pillscheduler/login.dart';
+import 'package:pillscheduler/loginpage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +21,11 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: LandingPage(),
+      routes: {
+        '/landingpage2' : (context) => LandingPage2(),
+        '/login' : (context) => LoginPage(),
+        'dashboard' : (context) => DashBoard(),
+      },
     );
   }
 }
