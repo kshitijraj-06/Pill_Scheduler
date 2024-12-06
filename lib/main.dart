@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pillscheduler/dashboard.dart';
 import 'package:pillscheduler/landingpage.dart';
 import 'package:pillscheduler/loginpage.dart';
+import 'package:pillscheduler/widgets/calendercard.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
         '/landingpage2' : (context) => LandingPage2(),
         '/login' : (context) => LoginPage(),
         'dashboard' : (context) => DashBoard(),
+        '/cc' : (context) => CalenderCard(),
       },
     );
   }
