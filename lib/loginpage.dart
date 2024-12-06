@@ -1,13 +1,43 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
-import 'package:page_animation_transition/animations/bottom_to_top_transition.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
 import 'package:page_animation_transition/animations/fade_animation_transition.dart';
 import 'package:page_animation_transition/page_animation_transition.dart';
 import 'package:pillscheduler/dashboard.dart';
 
-class LoginPage extends StatelessWidget{
+class LoginPage extends StatefulWidget{
   @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  @override
+
+  Future<Map<String, dynamic>> signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    // Obtain the auth details from the Google sign-in
+    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    // Once signed in, return the UserCredential and access token
+    final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+    return {
+      'userCredential': userCredential,
+      'idToken': googleAuth?.idToken,
+    };
+  }
+
+
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -45,9 +75,23 @@ class LoginPage extends StatelessWidget{
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: GestureDetector(
-            onTap: (){
-              Navigator.of(context).push(PageAnimationTransition(page:  DashBoard(), pageAnimationType: FadeAnimationTransition()));
+            onTap: () async {
+              try {
+                final result = await signInWithGoogle();
+                final UserCredential userCredential = result['userCredential'];
+                final String? idToken = result['idToken'];
+
+                final User? user = userCredential.user;
+                Navigator.of(context).push(PageAnimationTransition(page: DashBoard(), pageAnimationType: FadeAnimationTransition()));
+
+                print('Signed in as: ${user?.displayName}');
+                print('Access Token: $idToken');
+              } on FirebaseAuthException catch (e) {
+                // Handle errors
+                print(e.code);
+              }
             },
+
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -77,5 +121,4 @@ class LoginPage extends StatelessWidget{
       ),
     );
   }
-
 }
