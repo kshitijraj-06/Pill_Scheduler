@@ -28,7 +28,32 @@ class UpcomingMedicationsPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-
+            MedicationCard(
+              icon: Icons.medication_outlined,
+              name: 'Atorvastatin',
+              dosage: '20 mg',
+              frequency: 'Daily 2 times',
+              time: '14:00 PM',
+              remaining: '20 capsules remain',
+              course: 'Daily',
+            ),
+            MedicationCard(
+              icon: Icons.medical_services_outlined,
+              name: 'Metformin',
+              dosage: '500 ml',
+              frequency: 'Daily 2 times',
+              time: '14:00 PM',
+              remaining: '20 capsules remain',
+              course: 'Daily',
+            ),
+            MedicationCard(
+              icon: Icons.medication,
+              name: 'Clopidogrel',
+              dosage: '75 mg',
+              frequency: 'Daily 2 times',
+              time: '14:00 PM',
+              remaining: '20 capsules remain', course: 'Daily',
+            ),
           ],
         ),
       ),
@@ -44,7 +69,6 @@ class MedicationCard extends StatelessWidget {
   final String time;
   final String remaining;
   final String course;
-  final Color iconColor;
 
   const MedicationCard({
     required this.icon,
@@ -53,8 +77,7 @@ class MedicationCard extends StatelessWidget {
     required this.frequency,
     required this.time,
     required this.remaining,
-    required this.course,
-    required this.iconColor,
+    required this.course
   });
 
   @override
@@ -69,7 +92,7 @@ class MedicationCard extends StatelessWidget {
             CircleAvatar(
               radius: 24,
               backgroundColor: Colors.blue[50],
-              child: Icon(icon, color: iconColor, size: 28),
+              child: Icon(icon, color: Colors.blue, size: 28),
             ),
             SizedBox(width: 16),
             Expanded(
@@ -82,7 +105,7 @@ class MedicationCard extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    '$course $frequency Times',
+                    'Daily $frequency Times',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   SizedBox(height: 8),
