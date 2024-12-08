@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:pillscheduler/AddReminder/addmedform.dart';
 import 'package:pillscheduler/dashboard.dart';
 import 'package:pillscheduler/landingpage.dart';
 import 'package:pillscheduler/loginpage.dart';
 import 'package:pillscheduler/widgets/calendercard.dart';
+import 'package:pillscheduler/widgets/popUpMenu.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +32,9 @@ class MyApp extends StatelessWidget {
         '/landingpage2' : (context) => LandingPage2(),
         '/login' : (context) => LoginPage(),
         '/dashboard' : (context) => DashBoard(),
-        '/landingpage' : (context) => LandingPage()
+        '/landingpage' : (context) => LandingPage(),
+        '/medform' : (context) => MedForm(),
+        '/popup' : (context) => MenuCard(),
       },
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_event_calendar/flutter_event_calendar.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pillscheduler/widgets/calendercard.dart';
+import 'package:pillscheduler/widgets/popUpMenu.dart';
 import 'package:pillscheduler/widgets/test.dart';
 
 class DashBoard extends StatelessWidget {
@@ -112,6 +113,15 @@ class DashBoard extends StatelessWidget {
             child: Text('Test'),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              builder: (context) => MenuCard(),
+            );
+      }
       ),
     );
   }
