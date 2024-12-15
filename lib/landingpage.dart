@@ -63,7 +63,7 @@ class LandingPage2 extends StatelessWidget{
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(PageAnimationTransition(page: LoginPage(), pageAnimationType: FadeAnimationTransition()));
+        Navigator.of(context).push(PageAnimationTransition(page: AuthScreen(), pageAnimationType: FadeAnimationTransition()));
       },
       child: Container(
         decoration: BoxDecoration(

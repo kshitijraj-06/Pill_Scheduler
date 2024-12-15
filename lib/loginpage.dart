@@ -1,124 +1,246 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
-import 'package:page_animation_transition/animations/fade_animation_transition.dart';
-import 'package:page_animation_transition/page_animation_transition.dart';
-import 'package:pillscheduler/dashboard.dart';
+import 'dart:convert';
 
-class LoginPage extends StatefulWidget{
+class AuthScreen extends StatefulWidget {
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  _AuthScreenState createState() => _AuthScreenState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _AuthScreenState extends State<AuthScreen> {
+  final _formKey = GlobalKey<FormState>();
+  bool _isLogin = true;
+  String _email = '';
+  String _password = '';
+  final FirebaseAuth auth = FirebaseAuth.instance;
+
   @override
-
-  Future<Map<String, dynamic>> signInWithGoogle() async {
-    // Trigger the authentication flow
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-    // Obtain the auth details from the Google sign-in
-    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
-
-    // Create a new credential
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
-      idToken: googleAuth?.idToken,
-    );
-
-    // Once signed in, return the UserCredential and access token
-    final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-
-    return {
-      'userCredential': userCredential,
-      'idToken': googleAuth?.idToken,
-    };
-  }
-
-
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blueAccent, Colors.white],
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade400, Colors.purple.shade300],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Text(
-            'MediAlert',
-            style: GoogleFonts.lexendDeca(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-              decoration: TextDecoration.none,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Text(
-              'Sign In/Up for the application',
-              style: GoogleFonts.lexendDeca(
-                fontSize: 20,
-                fontWeight: FontWeight.normal,
-                color: Colors.black,
-                decoration: TextDecoration.none,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: GestureDetector(
-            onTap: () async {
-              try {
-                final result = await signInWithGoogle();
-                final UserCredential userCredential = result['userCredential'];
-                final String? idToken = result['idToken'];
-
-                final User? user = userCredential.user;
-                Navigator.of(context).push(PageAnimationTransition(page: DashBoard(), pageAnimationType: FadeAnimationTransition()));
-
-                print('Signed in as: ${user?.displayName}');
-                print('Access Token: $idToken');
-              } on FirebaseAuthException catch (e) {
-                // Handle errors
-                print(e.code);
-              }
-            },
-
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.network(
-                  'https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-jiKhxDx1FrYbtRHKJ9z_hELisAlapwE9LUPh6fcXIfb5vwpbMl4xl9H9TRFPc5NOO8Sb3VSgIBrfRYvW6cUA',
-                  width: 50,
-                  height: 50,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(30),
+              child: Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                SizedBox(width: 36),
-                Text(
-                  'Sign In With Google',
-                  style: GoogleFonts.lexendDeca(
-                    textStyle: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.normal,
-                        decoration: TextDecoration.none,
-                        color: Colors.black
+                child: Padding(
+                  padding: EdgeInsets.all(25),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _isLogin ? 'Welcome Back!' : 'Create Account',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade800,
+                          ),
+                        ),
+                        SizedBox(height: 30),
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            prefixIcon: Icon(Icons.email),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) => _email = value!,
+                        ),
+                        SizedBox(height: 20),
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Password',
+                            prefixIcon: Icon(Icons.lock),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          obscureText: true,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your password';
+                            }
+                            if (value.length < 6) {
+                              return 'Password must be at least 6 characters';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) => _password = value!,
+                        ),
+                        SizedBox(height: 25),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          child: Text(
+                            _isLogin ? 'Login' : 'Sign Up',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          onPressed: _submitForm,
+                        ),
+                        TextButton(
+                          child: Text(
+                            _isLogin
+                                ? 'Create new account'
+                                : 'I already have an account',
+                            style: TextStyle(color: Colors.blue.shade800),
+                          ),
+                          onPressed: () => setState(() => _isLogin = !_isLogin),
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          icon: Icon(Icons.login),
+                          label: Text('Sign in with Google'),
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.redAccent,
+                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                            onPressed: () {
+                            signup(context);
+                            }
+                  ),
+                      ],
                     ),
-                  )
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
-          //Lottie.asset('assets/landing2.json', height: 350, width: 350),
-        ],
       ),
     );
   }
+
+  Future<void> loginUser(String idToken) async {
+    const String loginUrl = 'http://172.28.0.1:8080/user/fetch';
+    const String authHeader = 'Authorization';
+    const String contentTypeHeader = 'Content-Type';
+    const String contentTypeJson = 'application/json';
+
+    final url = Uri.parse(loginUrl);
+
+    // Prepare the JSON payload
+    final body = jsonEncode({
+      'idToken': idToken,
+    });
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          authHeader: 'Bearer $idToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Successfully logged in, navigate to the home screen
+        Navigator.pushNamed(context, '/home');
+      } else {
+        // Handle specific errors
+        if (response.statusCode == 401) {
+          print('Unauthorized: Invalid token');
+        } else if (response.statusCode == 500) {
+          print('Server error: ${response.body}');
+        } else {
+          print('Login failed: ${response.body}');
+        }
+        // Show user feedback
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      print('Error during login: $e');
+      // Show user feedback
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error during login: $e')),
+      );
+    }
+  }
+
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      try {
+        UserCredential userCredential;
+        if (_isLogin) {
+          // Sign in with email and password.
+          userCredential = await auth.signInWithEmailAndPassword(
+            email: _email,
+            password: _password,
+          );
+        } else {
+          // Create a new account with email and password.
+          userCredential = await auth.createUserWithEmailAndPassword(
+            email: _email,
+            password: _password,
+          );
+        }
+        // Generate ID token for the authenticated user.
+        String? idToken = await userCredential.user!.getIdToken();
+        print("Generated ID Token: $idToken");
+
+        // Use the login endpoint to verify the token.
+        await loginUser(idToken!);
+      } catch (e) {
+        print("Error: $e");
+        // Optionally, show an error dialog to the user.
+      }
+    }
+  }
+
+
+
+
+  Future<void> signup(BuildContext context) async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final GoogleSignInAccount? googleSignInAccount = await googleSignIn.signIn();
+    if (googleSignInAccount != null) {
+      final GoogleSignInAuthentication googleSignInAuthentication =
+      await googleSignInAccount.authentication;
+      final AuthCredential authCredential = GoogleAuthProvider.credential(
+          idToken: googleSignInAuthentication.idToken,
+          accessToken: googleSignInAuthentication.accessToken);
+
+      // Getting users credential
+      UserCredential result = await auth.signInWithCredential(authCredential);
+      //User user = result.user;
+
+      print('CLicked');  // if result not null we simply call the MaterialpageRoute,
+      // for go to the HomePage screen
+    }
+  }
 }
+
+

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "334744837326",
+    "project_id": "pillscheduler",
+    "storage_bucket": "pillscheduler.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:334744837326:android:9d49c2d5c8d35ab315049f",
+        "android_client_info": {
+          "package_name": "com.zerobee.pillscheduler"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "334744837326-pkd2vtob4nb22k440chc2q6h133d27c0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJMSC548cD577QjDduLZ82t8Ro3ST5uLU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "334744837326-86qnh0tjc8elsl9kelcp2g84o7f4oanh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "334744837326-1mm11g4qor3m2vju3r36c044209ghfok.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.zerobee.pillscheduler"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

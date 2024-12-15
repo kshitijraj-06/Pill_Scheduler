@@ -1,127 +1,87 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_event_calendar/flutter_event_calendar.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pillscheduler/widgets/calendercard.dart';
-import 'package:pillscheduler/widgets/popUpMenu.dart';
-import 'package:pillscheduler/widgets/test.dart';
+import 'package:table_calendar/table_calendar.dart';
 
-class DashBoard extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+  late CalendarFormat _calendarFormat = CalendarFormat.twoWeeks;
+
+  void _onItemTapped(int index) {
+    if (index == 1) {
+      Navigator.pushNamed(context, '/chatbot');
+    } else if (index == 2) {
+      Navigator.pushNamed(context, '/profile');
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Define the list of events
-    final events = [
-      Event(
-        child: MedicationCard(
-          icon: Icons.medication_outlined,
-          name: 'Medical 1',
-          dosage: '1 mg',
-          frequency: '2',
-          time: '2:00 PM',
-          remaining: '20',
-          course: 'Daily',
-         // iconColor: Colors.black,
-        ),
-        dateTime: CalendarDateTime(
-          year: 2024,
-          month: 12,
-          day: 7,
-          calendarType: CalendarType.GREGORIAN,
-        ),
-      ),
-      Event(
-        child: MedicationCard(
-          icon: Icons.medication_outlined,
-          name: 'Medical 2',
-          dosage: '1 mg',
-          frequency: '2',
-          time: '4:00 PM',
-          remaining: '15',
-          course: 'Daily',
-         // iconColor: Colors.black,
-        ),
-        dateTime: CalendarDateTime(
-          year: 2024,
-          month: 12,
-          day: 7,
-          calendarType: CalendarType.GREGORIAN,
-        ),
-      ),
-      Event(
-        child: MedicationCard(
-          icon: Icons.medication_outlined,
-          name: 'Medical 2',
-          dosage: '1 mg',
-          frequency: '2',
-          time: '4:00 PM',
-          remaining: '15',
-          course: 'Daily',
-          //iconColor: Colors.black,
-        ),
-        dateTime: CalendarDateTime(
-          year: 2024,
-          month: 12,
-          day: 7,
-          calendarType: CalendarType.GREGORIAN,
-        ),
-      ),
-    ];
-
-    // Calculate height dynamically
-    final cardHeight = 200.0; // Approximate height of each card
-    final maxHeight = MediaQuery.of(context).size.height ;
-    final calculatedHeight = (events.length * cardHeight).clamp(0.0, maxHeight);
-
     return Scaffold(
       appBar: AppBar(
+        title: Text('Pill Scheduler',
+        style: GoogleFonts.abyssinicaSil()),
         automaticallyImplyLeading: false,
-        title: Text(
-          'MediAlert',
-          style: GoogleFonts.lexendDeca(
-            textStyle: TextStyle(
-              color: Colors.green.shade400,
-              fontWeight: FontWeight.bold,
-              fontSize: 30,
-            ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
           ),
-        ),
+        ],
       ),
       body: Column(
         children: [
-          Container(
-            height: calculatedHeight, // Dynamically adjust height
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: EventCalendar(
-                calendarOptions: CalendarOptions(
-                  viewType: ViewType.DAILY,
-                  headerMonthElevation: 0,
-                  headerMonthBackColor: Colors.white,
-                  headerMonthShape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                calendarType: CalendarType.GREGORIAN,
-                calendarLanguage: 'en',
-                events: events,
+          TableCalendar(
+            firstDay: DateTime.utc(2020),
+            lastDay: DateTime.utc(2030),
+            focusedDay: DateTime.now(),
+            calendarStyle: CalendarStyle(
+              todayDecoration:
+              BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+              selectedDecoration:
+              BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+            ),
+            onFormatChanged: (format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            },
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: 3,
+              itemBuilder: (context, index) => ListTile(
+                leading: Icon(Icons.medication),
+                title: Text('Medication ${index + 1}'),
+                subtitle: Text('Dosage: 1 pill, Time: 8:00 AM'),
+                onTap: () =>
+                    Navigator.pushNamed(context, '/medication_details'),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.pushNamed(context, '/cc');
-            },
-            child: Text('Test'),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-          onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (context) => MenuCard(),
-            );
-      }
+        onPressed: () => Navigator.pushNamed(context, '/add_medicine'),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chatbot'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile')
+        ],
+        onTap: _onItemTapped,
       ),
     );
   }
