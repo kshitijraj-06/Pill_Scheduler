@@ -1,276 +1,274 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'dart:async';
 
-class MedicationDetailsScreen extends StatelessWidget {
-  final String medicineName = 'Paracetamol'; // Replace with dynamic data
-  final String dosage = '1 Pill';
-  final List<String> times = ['08:00 AM', '02:00 PM', '08:00 PM'];
-  final DateTime startDate = DateTime.now();
-  final DateTime endDate = DateTime.now().add(Duration(days: 30));
-  final String notes =
-      'Take after meals. Avoid alcohol. Consult doctor if fever persists.';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'dart:convert';
+
+class MedicineDetailScreen extends StatefulWidget {
+  final Map<String, dynamic> medication;
+
+  const MedicineDetailScreen({super.key, required this.medication});
+
+  @override
+  State<MedicineDetailScreen> createState() => _MedicineDetailScreenState();
+}
+
+class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
+  late final Map<String, dynamic> _medication;
+  final Map<int, bool> _processingDoses = {};
+  late final DateFormat _dateFormat;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _medication = widget.medication;
+    _dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
+  }
+
+  Future<void> _markDoseAsTaken(int doseId) async {
+    setState(() {
+      _processingDoses[doseId] = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final token = await user.getIdToken();
+      final response = await http.put(
+        Uri.parse('https://minorproject-yytm.onrender.com/reminder/mark-taken/${_medication['id']}/$doseId'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 100) {
+        setState(() {
+          final doseIndex = _medication['doses'].indexWhere((d) => d['id'] == doseId);
+          if (doseIndex != -1) {
+            _medication['doses'][doseIndex]['isTaken'] = true;
+            _medication['remaining_doses'] = (_medication['remaining_doses'] ?? 0) - 1;
+          }
+        });
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to mark dose');
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() => _errorMessage = 'Authentication error: ${e.message}');
+    } on http.ClientException catch (e) {
+      setState(() => _errorMessage = 'Network error: ${e.message}');
+    } on TimeoutException {
+      setState(() => _errorMessage = 'Request timed out');
+    } on FormatException {
+      setState(() => _errorMessage = 'Invalid server response');
+    } on Exception catch (e) {
+      setState(() => _errorMessage = e.toString());
+    } finally {
+      setState(() => _processingDoses.remove(doseId));
+    }
+  }
+
+  Widget _buildErrorBanner() {
+    if (_errorMessage == null) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      color: Colors.red[100],
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red),
+          const SizedBox(width: 8),
+          Expanded(child: Text(_errorMessage!)),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => setState(() => _errorMessage = null),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDoseItem(dynamic dose) {
+    final isTaken = dose['isTaken'] == true;
+    final time = dose['doseTime'];
+    final timeStr = time is String ? _formatTimeString(time) :
+    '${time['hour'].toString().padLeft(2, '0')}:${time['minute'].toString().padLeft(2, '0')}';
+
+    return ListTile(
+      leading: Icon(
+        isTaken ? Icons.check_circle : Icons.access_time,
+        color: isTaken ? Colors.green : Colors.blue,
+      ),
+      title: Text(timeStr),
+      trailing: (_processingDoses[dose['id']] ?? false)
+          ? const SizedBox(
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(strokeWidth: 3),
+      )
+          : IconButton(
+        icon: Icon(
+          isTaken ? Icons.undo : Icons.check,
+          color: isTaken ? Colors.grey : Colors.green,
+        ),
+        onPressed: isTaken ? null : () => _markDoseAsTaken(dose['id']),
+      ),
+    );
+  }
+
+  String _formatTimeString(String time) {
+    final parts = time.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Medication Details',
-            style: TextStyle(fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.edit, color: Colors.blue.shade800),
-            onPressed: () {
-              // Navigate to edit screen
-            },
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.blue.shade50, Colors.white],
-          ),
-        ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildMedicineHeader(),
-              SizedBox(height: 20),
-              _buildDosageCard(),
-              SizedBox(height: 20),
-              _buildScheduleCard(),
-              SizedBox(height: 20),
-              _buildDateRangeCard(),
-              SizedBox(height: 20),
-              _buildNotesCard(),
-              SizedBox(height: 30),
-              _buildActionButtons(),
-            ],
-          ),
+        title: Text(_medication['r_name'] ?? 'Medication Details'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-    );
-  }
-
-  Widget _buildMedicineHeader() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.blue.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.medication, size: 32, color: Colors.blue.shade800),
-            ),
-            SizedBox(width: 16),
-            Expanded(
+      body: Column(
+        children: [
+          _buildErrorBanner(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(medicineName,
-                      style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue.shade800)),
-                  SizedBox(height: 4),
-                  Text('Active Medication',
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600)),
+                  // Basic Information Card
+                  Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Basic Information',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildDetailRow('Type', _medication['r_type'] ?? 'Unknown'),
+                          _buildDetailRow('Category', _medication['category'] ?? 'Unknown'),
+                          _buildDetailRow('Frequency', _medication['frequency'] ?? 'Unknown'),
+                          _buildDetailRow(
+                            'Start Date',
+                            _dateFormat.format(DateTime.parse(_medication['start_date_time'])),
+                          ),
+                          _buildDetailRow(
+                            'End Date',
+                            _dateFormat.format(DateTime.parse(_medication['end_date_time'])),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Dose Schedule Card
+                  Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Dose Schedule',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              Chip(
+                                label: Text(
+                                    '${_medication['remaining_doses']} doses remaining'),
+                                backgroundColor: Colors.blue.shade100,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _medication['doses'].length,
+                            separatorBuilder: (context, index) => const Divider(),
+                            itemBuilder: (context, index) =>
+                                _buildDoseItem(_medication['doses'][index]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Notes Section
+                  if (_medication['notes'] != null && _medication['notes'].isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Card(
+                        elevation: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Additional Notes',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(_medication['notes']),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDosageCard() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Dosage Information 💊',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            SizedBox(height: 15),
-            Row(
-              children: [
-                Icon(Icons.medication_liquid, color: Colors.blue.shade800),
-                SizedBox(width: 10),
-                Text(dosage,
-                    style: TextStyle(fontSize: 16, color: Colors.grey.shade800)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScheduleCard() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Intake Schedule ⏰',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            SizedBox(height: 15),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: times
-                  .map((time) => Chip(
-                label: Text(time),
-                backgroundColor: Colors.blue.shade50,
-                labelStyle: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.blue.shade800),
-              ))
-                  .toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateRangeCard() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Date Range 📅',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            SizedBox(height: 15),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDateItem('Start Date',
-                      DateFormat('MMM dd, yyyy').format(startDate)),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: _buildDateItem('End Date',
-                      DateFormat('MMM dd, yyyy').format(endDate)),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateItem(String title, String date) {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-          SizedBox(height: 4),
-          Text(date,
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blue.shade800)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildNotesCard() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Additional Notes 📝',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            SizedBox(height: 15),
-            Text(notes,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade800)),
-          ],
-        ),
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(child: Text(value)),
+        ],
       ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              side: BorderSide(color: Colors.red.shade400),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text('Delete',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.red.shade400)),
-            onPressed: () {
-              // Handle delete action
-            },
-          ),
-        ),
-        SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              backgroundColor: Colors.blue.shade800,
-            ),
-            child: Text('Edit',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            onPressed: () {
-              // Navigate to edit screen
-            },
-          ),
-        ),
-      ],
     );
   }
 }
