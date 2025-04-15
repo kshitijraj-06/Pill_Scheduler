@@ -7,9 +7,9 @@
 ## 🖼️ Screenshot
 
 <div align="center">
-  <img src="https://github.com/kshitijraj-06/Pill_Scheduler/blob/master/1.jpg" alt="Home Screen" width="200px" />
-  <img src="https://github.com/kshitijraj-06/Pill_Scheduler/blob/master/2.jpg" alt="Medication List" width="200px" />
-  <img src="https://github.com/kshitijraj-06/Pill_Scheduler/blob/master/3.jpg" alt="Reminder Setup" width="200px" />
+  <img src="https://github.com/kshitijraj-06/Pill_Scheduler/blob/master/3.jpg" alt="Home Screen" width="200px" />
+  <img src="https://github.com/kshitijraj-06/Pill_Scheduler/blob/master/1.jpg" alt="Medication List" width="200px" />
+  <img src="https://github.com/kshitijraj-06/Pill_Scheduler/blob/master/2.jpg" alt="Reminder Setup" width="200px" />
 </div>
 
 ---
