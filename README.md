@@ -16,11 +16,11 @@
 
 ## 📑 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Contact](#contact)
+- [Overview](#Overview)
+- [Features](#Features)
+- [Architecture](#Architecture)
+- [Installation](#Installation)
+- [Contact](#Contact)
 - [Clone](#clone_the_repository)
 
 ---
