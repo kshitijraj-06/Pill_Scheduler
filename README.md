@@ -1,16 +1,72 @@
-# pillscheduler
+# 💊 Pill Scheduler 📅
 
-A new Flutter project.
+**Pill Scheduler** is a smart medication management app that helps you track your medicine schedule and reminds you when it's time to take your pills. It’s designed for users of all ages and supports multiple medications, history tracking, and notifications — all in one sleek interface.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🖼️ Screenshot
 
-A few resources to get you started if this is your first Flutter project:
+![App Screenshot](screenshot.png)  
+> _Replace `screenshot.png` with your actual screenshot image inside the project directory._
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 📑 Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Contact](#contact)
+- [Clone](#clone_the_repository)
+
+---
+
+## 🌟 Overview
+
+Keeping track of medicines shouldn't be a headache. This app helps you:
+
+- Schedule doses
+- Get notified when it’s time 💡
+- Keep track of your pill-taking history 🕒
+
+No more forgotten pills. No more scribbled notes.
+
+---
+
+## ✨ Features
+
+- 📋 **Add Multiple Medications** – Customize dose, time, and frequency.
+- 🔔 **Reminders & Notifications** – Never miss a dose.
+- 📊 **History Logging** – Keep an automatic log of when you took each pill.
+- 💾 **Persistent Storage** – Data stays saved even after restarts.
+- ⚙️ **Easy Configuration** – Theme, notifications, and more.
+- 🧑‍💻 **Clean UI** – Simple, intuitive design for all users.
+
+---
+
+## 🏗️ Architecture
+
+- **Frontend:** Flutter (or web/desktop UI framework)
+- **Backend:** Python/Node.js backend (if any)
+- **Database:** SQLite (default), configurable for other SQL engines
+- **Reminder Engine:** Background service or cron-like system that checks pill times and triggers notifications
+
+---
+
+## ⚙️ Installation
+
+### 🔧 Prerequisites
+
+- Python 3.7+ / Node.js (depending on your backend)
+- Flutter SDK (if mobile UI is used)
+- pip / npm / yarn
+- Android Studio / Viusual Studio (Whichever you prefer)
+
+---
+
+### 🛠️  Clone the Repository
+```bash
+git clone https://github.com/kshitijraj-06/pillscheduler.git
+cd pillscheduler
+```
