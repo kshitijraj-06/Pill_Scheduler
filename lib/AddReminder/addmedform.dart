@@ -5,17 +5,26 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../services/notification_service.dart';
+
 class AddMedicineScreen extends StatefulWidget {
+  final Map<String, dynamic>? existingMedication;
+
+  const AddMedicineScreen({super.key, this.existingMedication});
+
   @override
   _AddMedicineScreenState createState() => _AddMedicineScreenState();
 }
 
 class _AddMedicineScreenState extends State<AddMedicineScreen> {
+  final NotificationService _notificationService = NotificationService();
+  final List<String> _doseTimes = [];
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  late TextEditingController _nameController = TextEditingController();
   final _photoController = TextEditingController();
   final _notesController = TextEditingController();
   final _daysController = TextEditingController();
+
 
   List<TimeOfDay> _selectedTimes = [];
   DateTime _startDate = DateTime.now();
@@ -30,6 +39,33 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final _backgroundColor = Colors.white;
   final _textColor = Colors.black87;
   final _inputBorderColor = Colors.grey.shade300;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(
+      text: widget.existingMedication?['r_name'] ?? '',
+    );
+
+    // Safely initialize dose times
+    if (widget.existingMedication != null &&
+        widget.existingMedication!.containsKey('doses')) {
+      try {
+        final dynamic doses = widget.existingMedication!['doses'];
+        if (doses is List) {
+          _doseTimes.addAll(doses.map<String>((d) {
+            if (d is Map && d['doseTime'] != null) {
+              return d['doseTime'].toString();
+            }
+            return '00:00:00';
+          }));
+        }
+      } catch (e) {
+        debugPrint('Error parsing doses: $e');
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +141,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                             Expanded(
                               child: _buildDropdown(
                                 value: _selectedType,
-                                items: ['MEDICINE', 'SUPPLEMENT', 'OTHER'],
+                                items: ['MEDICINE', 'HEART_RATE', 'INSULIN', 'BP'],
                                 label: 'Type',
                                 icon: Icons.category,
                                 onChanged: (value) =>
@@ -507,7 +543,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       };
 
       final response = await http.post(
-        Uri.parse('https://minorproject-yytm.onrender.com/reminder/create'),
+        Uri.parse('http://172.28.0.1:8080/reminder/create'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
@@ -517,6 +553,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       print(idToken);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        final newReminderId = responseData['data']['id'].toString();
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Reminder saved successfully!'),
@@ -524,10 +563,25 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           ),
         );
         Navigator.pop(context);
+        if (widget.existingMedication == null) {
+          await _notificationService.scheduleDoseNotifications(
+            newReminderId,
+            _selectedTimes.cast<String>(),
+          );
+        } else {
+          // Update existing notifications
+          await _notificationService.cancelScheduledNotifications(
+              widget.existingMedication!['id'].toString());
+          await _notificationService.scheduleDoseNotifications(
+              newReminderId, _doseTimes);
+        }
       } else {
+
         throw Exception('Failed to save: ${response.body}');
+
       }
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error saving reminder: $e'),

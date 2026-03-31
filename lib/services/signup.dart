@@ -7,7 +7,7 @@ class SignupService {
 
   Future<Map<String, dynamic>?> signUpWithEmail(
       String name, String email, String password, String idToken) async {
-    final url = Uri.parse('https://minorproject-yytm.onrender.com/user/login');
+    final url = Uri.parse('http://140.245.214.9:8080/user/login');
 
     final response = await http.post(
       url,

@@ -17,7 +17,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isLoading = false;
 
   Future<void> _loginUser(String idToken) async {
-    const String loginUrl = 'https://minorproject-yytm.onrender.com/user/fetch';
+    const String loginUrl = 'http://172.28.0.1:8080/user/fetch';
 
     try {
       final response = await http.get(

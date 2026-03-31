@@ -37,6 +37,7 @@ class MedicationReminder {
   final String category;
   final List<DoseTime> doses;
   final String frequency;
+  final String flag;
   final String status;
   final String? notes;
   final String? photoUrl;
@@ -47,6 +48,7 @@ class MedicationReminder {
     required this.category,
     required this.doses,
     required this.frequency,
+    required this.flag,
     required this.status,
     this.notes,
     this.photoUrl,
@@ -61,6 +63,7 @@ class MedicationReminder {
           List<DoseTime>.from(json['doses'].map((x) => DoseTime.fromJson(x))),
       frequency: json['frequency'],
       status: json['status'],
+      flag: json['flag'],
       notes: json['notes'],
       photoUrl: json['r_photo'],
     );
@@ -133,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<UserProfile> fetchUserProfile(String idToken) async {
     final response = await http.get(
-      Uri.parse('https://minorproject-yytm.onrender.com/user/fetch'),
+      Uri.parse('http://192.168.29.136:8080/user/fetch'),
       headers: {'Authorization': 'Bearer $idToken'},
     );
 
@@ -147,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<List<MedicationReminder>> fetchMedications(String idToken) async {
     final response = await http.get(
-      Uri.parse('https://minorproject-yytm.onrender.com/reminder/fetch'),
+      Uri.parse('http://140.245.214.9:8080/reminder/fetch'),
       headers: {'Authorization': 'Bearer $idToken'},
     );
 
@@ -236,10 +239,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
   Future<String> _countActiveMedications() async {
-    if (medicationsFuture == null) return '0';
+    if (medicationsFuture == null) {
+      debugPrint("medicationsFuture is null");
+      return '0';
+    }
+
     final meds = await medicationsFuture!;
-    return meds.where((m) => m.status == 'ACTIVE').length.toString();
+
+    final activeCount = meds.where((m) => m.flag == 'ACTIVE').length;
+
+    return activeCount.toString();
   }
+
 
   Widget _buildStatItem(String title, String value) {
     return Column(

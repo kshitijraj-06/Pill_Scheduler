@@ -35,6 +35,8 @@ class _ChatWidgetState extends State<ChatWidget> {
     _chat = _model.startChat();
   }
 
+
+
   void _scrollDown() {
     WidgetsBinding.instance.addPostFrameCallback(
           (_) => _scrollController.animateTo(
@@ -134,6 +136,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                     IconButton(
                       onPressed: () async {
                         _sendChatMessage(_textController.text);
+                        _textController.clear();
                       },
                       icon: Icon(
                         Icons.send,
@@ -258,6 +261,13 @@ class _ChatWidgetState extends State<ChatWidget> {
       },
     );
   }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
 }
 
 class MessageWidget extends StatelessWidget {

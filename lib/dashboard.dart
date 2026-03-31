@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final token = await user.getIdToken();
       final response = await http.get(
-        Uri.parse('https://minorproject-yytm.onrender.com/reminder/fetch'),
+        Uri.parse('http://172.28.0.1:8080/reminder/fetch'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 10));
 
@@ -297,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: LiquidPullToRefresh(
         key: _refreshIndicatorKey,
         onRefresh: _fetchMedications,
-        color: Colors.blue.shade100,
+        color: Colors.black87,
         backgroundColor: Colors.white,
         height: 150,
         animSpeedFactor: 2,
@@ -331,6 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return meds.isNotEmpty ? [1] : [];
               },
             ),
+            SizedBox(height: 20,),
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
